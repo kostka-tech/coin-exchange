@@ -8,11 +8,17 @@ const Section = styled.section`
     padding: 1.5rem 0 1.5rem 5rem;
 `;
 
+const Div = styled.div`
+    float: left;
+`;
+
 export default class AccountBalance extends Component {
     render() {
+        const buttonText =  this.props.showBalance? 'Hide Balance' : 'Show Balance'
         return (
             <Section>
-                Balance: $ { this.props.amount }    
+                { this.props.showBalance && <Div>Balance: $ { this.props.amount }  </Div> }
+                <button onClick={this.props.handleToggleBalance}>{buttonText}</button>
             </Section>
         )
     }
