@@ -1,8 +1,9 @@
-import React, { Component } from 'react';
+import React, { useState, useEffect } from 'react';
 import CoinList from './components/CoinList/CoinList';
 import AccountBalance from './components/AccountBalance/AccountBalance';
 import Header from './components/Header/Header';
 import styled from 'styled-components';
+import axios from 'axios';
 
 const Div = styled.div`
   text-align: center;
@@ -10,76 +11,69 @@ const Div = styled.div`
   color: #cccccc;
 `;
 
-class App extends Component {
-  state = {
-    balance: 10000,
-    showBalance: true,
-    coinData: [
-      {
-        name: 'Bitcoin',
-        ticker: 'BTC',
-        price: 360000,
-        balance: 25
-      },
-      {
-        name: 'Ethereum',
-        ticker: 'ETH',
-        price: 55000,
-        balance: 10
-      },
-      {
-        name: 'Tether',
-        ticker: 'USDT',
-        price: 1,
-        balance: 1000000
-      },
-      {
-        name: 'Ripple',
-        ticker: 'XRP',
-        price: 0.004,
-        balance: 0
-      },
-      {
-        name: 'B Cash',
-        ticker: 'BCH',
-        price: 0.00004,
-        balance: 0
+const COIN_COUNT = 10;
+const formatPrice = price => parseFloat(Number(price).toFixed(4));
+
+function App(props) {
+  const [balance, setBalance] = useState(10000);
+  const [showBalance, setShowBalance] = useState(true);
+  const [coinData, setCoinData] = useState([]);
+
+  const componentDidMount = async() => {
+    const response = await axios.get('https://api.coinpaprika.com/v1/coins');
+    const coinIds = response.data.slice(0, COIN_COUNT).map(coin => coin.id);
+    const tickerUrl = 'https://api.coinpaprika.com/v1/tickers/';
+    const promises = coinIds.map(id => axios.get(tickerUrl + id));
+    const coinData = await Promise.all(promises);
+    const coinPriceData = coinData.map(function(response) {
+      const coin = response.data;
+      return {
+        key: coin.id,
+        name: coin.name,
+        ticker: coin.symbol,
+        balance: 0,
+        price: formatPrice(coin.quotes['USD'].price),
       }
-    ]
+    });
+    setCoinData(coinPriceData);
   }
-  handleRefresh = (valueChangeTicker) => {
-    const newCoinData = this.state.coinData.map(function (values) {
+
+  useEffect(function() {
+    if (coinData.length === 0) {
+      componentDidMount();
+    }
+  });
+
+  const handleRefresh = async (valueChangeTickerId) => {
+    const tickerUrl = `https://api.coinpaprika.com/v1/tickers/${valueChangeTickerId}`;
+    const response = await axios.get(tickerUrl);
+    const newPrice = formatPrice(response.data.quotes['USD'].price);
+
+    const newCoinData = coinData.map(function (values) {
       let newValues = {...values};
-      if (valueChangeTicker === values.ticker) {
-        const randomPercentage = 0.995 + Math.random() * 0.01;
-        newValues.price *= randomPercentage;
+      if (valueChangeTickerId === values.key) {
+        newValues.price = newPrice;
       }
       return newValues;
     });
-    this.setState({ coinData: newCoinData });
-  } 
-  handleToggleBalance = () => {
-    // this.setState(function (oldState) {
-    //   return {
-    //     ...oldState,
-    //     showBalance: !this.oldState.showBalance
-    //   }
-    // });
-    this.setState({ showBalance: !this.state.showBalance });
+    setCoinData(newCoinData);
   }
-  render() {
-    return (
-      <Div>
-        <Header/>
-        <AccountBalance amount={this.state.balance} 
-                        handleToggleBalance={this.handleToggleBalance}
-                        showBalance={this.state.showBalance} />
-        <CoinList coinData={this.state.coinData} 
-                  handleRefresh={this.handleRefresh} 
-                  showBalance={this.state.showBalance}/>
-      </Div>
-    );
+
+  const handleToggleBalance = () => {
+    setShowBalance(oldValue => !oldValue);
   }
+
+  return (
+    <Div>
+      <Header/>
+      <AccountBalance amount={balance} 
+                      handleToggleBalance={handleToggleBalance}
+                      showBalance={showBalance} />
+      <CoinList coinData={coinData} 
+                handleRefresh={handleRefresh} 
+                showBalance={showBalance}/>
+    </Div>
+  );
 }
 
 export default App;

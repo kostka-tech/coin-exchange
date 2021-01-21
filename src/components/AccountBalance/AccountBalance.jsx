@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React from 'react';
 import PropTypes from 'prop-types';
 import styled from 'styled-components';
 
@@ -12,16 +12,14 @@ const Div = styled.div`
     float: left;
 `;
 
-export default class AccountBalance extends Component {
-    render() {
-        const buttonText =  this.props.showBalance? 'Hide Balance' : 'Show Balance'
-        return (
-            <Section>
-                { this.props.showBalance && <Div>Balance: $ { this.props.amount }  </Div> }
-                <button onClick={this.props.handleToggleBalance}>{buttonText}</button>
-            </Section>
-        )
-    }
+export default function AccountBalance(props) {
+    const buttonText =  props.showBalance? 'Hide Balance' : 'Show Balance'
+    return (
+        <Section>
+            { props.showBalance && <Div>Balance: $ { props.amount }  </Div> }
+            <button onClick={props.handleToggleBalance}>{buttonText}</button>
+        </Section>
+    )
 }
 
 AccountBalance.propTypes = {
