@@ -67,7 +67,10 @@ function App(props) {
     const newCoinData = coinData.map(function(values) {
       let newValues = {...values};
       if (valueChangeTickerId === values.key) {
+        // Need to debug some error in here. Clicking buy negates balance at top of screen and
+        // the balance in the table is not updating properly....
         newValues.balance += balanceChange;
+        // newValues.balance = values.balance - balanceChange * newValues.price;
         setBalance(oldBalance => oldBalance - balanceChange * newValues.price);
       }
       return newValues;
