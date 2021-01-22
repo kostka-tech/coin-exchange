@@ -4,6 +4,9 @@ import AccountBalance from './components/AccountBalance/AccountBalance';
 import Header from './components/Header/Header';
 import styled from 'styled-components';
 import axios from 'axios';
+// import 'bootstrap/dist/css/bootstrap.min.css';
+import 'bootswatch/dist/flatly/bootstrap.min.css';
+import '@fortawesome/fontawesome-free/js/all';
 
 const Div = styled.div`
   text-align: center;
@@ -16,7 +19,7 @@ const formatPrice = price => parseFloat(Number(price).toFixed(4));
 
 function App(props) {
   const [balance, setBalance] = useState(10000);
-  const [showBalance, setShowBalance] = useState(true);
+  const [showBalance, setShowBalance] = useState(false);
   const [coinData, setCoinData] = useState([]);
 
   const componentDidMount = async() => {
@@ -59,6 +62,23 @@ function App(props) {
     setCoinData(newCoinData);
   }
 
+  const handleTransaction = (isBuy, valueChangeTickerId) => {
+    const balanceChange = isBuy ? 1 : -1;
+    const newCoinData = coinData.map(function(values) {
+      let newValues = {...values};
+      if (valueChangeTickerId === values.key) {
+        newValues.balance += balanceChange;
+        setBalance(oldBalance => oldBalance - balanceChange * newValues.price);
+      }
+      return newValues;
+    });
+    setCoinData(newCoinData);
+  }
+
+  const handleAirdrop = () => {
+    setBalance(oldBalance => oldBalance + 1000);
+  }
+  
   const handleToggleBalance = () => {
     setShowBalance(oldValue => !oldValue);
   }
@@ -68,9 +88,11 @@ function App(props) {
       <Header/>
       <AccountBalance amount={balance} 
                       handleToggleBalance={handleToggleBalance}
+                      handleAirdrop={handleAirdrop}
                       showBalance={showBalance} />
       <CoinList coinData={coinData} 
                 handleRefresh={handleRefresh} 
+                handleTransaction={handleTransaction} 
                 showBalance={showBalance}/>
     </Div>
   );
